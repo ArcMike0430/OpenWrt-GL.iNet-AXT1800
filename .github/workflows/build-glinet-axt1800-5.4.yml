@@ -60,6 +60,15 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
+        # Fix GCC 7.5.0 fixincludes on Ubuntu 22.04 (glibc 2.35+)
+        # Old cross-compiler can't find stdc-predef.h during toolchain build
+        sudo apt-get install -y -qq gcc-multilib g++-multilib libc6-dev-i386 2>/dev/null || true
+        sudo mkdir -p /usr/include/x86_64-linux-gnu/bits
+        sudo ln -sf /usr/include/x86_64-linux-gnu/bits/stdint-intn.h /usr/include/bits/stdint-intn.h 2>/dev/null || true
+        sudo ln -sf /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h /usr/include/bits/stdint-uintn.h 2>/dev/null || true
+        sudo ln -sf /usr/include/stdc-predef.h /usr/include/x86_64-linux-gnu/stdc-predef.h 2>/dev/null || true
+        echo "✅ GCC fixincludes headers installed"
+
     - name: Clone source code
       working-directory: /workdir
       run: |
