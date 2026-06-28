@@ -90,17 +90,26 @@ jobs:
         echo 'CONFIG_ATH11K_CFR=y' >> .config
         # Fix: DM_REQ_CRYPT (Qualcomm-specific, no default in BSP Kconfig)
         # kconfig.pl merges: target/linux/generic/config-5.4 + target/linux/ipq807x/ipq60xx/config-default
-        # Writing to both to ensure coverage regardless of override order
-        for cfg in "target/linux/generic/config-5.4" "/workdir/gl-infra-builder/wlan-ap/feeds/qca-wifi-6/ipq60xx/config-5.4" "/workdir/gl-infra-builder/wlan-ap/feeds/qca-wifi-6/ipq807x/config-5.4"; do
-            if [ -f "\$cfg" ]; then
-                if ! grep -q "DM_REQ_CRYPT" "\$cfg" 2>/dev/null; then
-                    echo "# CONFIG_DM_REQ_CRYPT is not set" >> "\$cfg"
-                    echo "✅ Disabled DM_REQ_CRYPT in \$cfg"
-                else
-                    echo "ℹ️  DM_REQ_CRYPT already present in \$cfg"
-                fi
+        GENERIC_CFG="target/linux/generic/config-5.4"
+        if [ -f "\$GENERIC_CFG" ]; then
+            if ! grep -q "DM_REQ_CRYPT" "\$GENERIC_CFG" 2>/dev/null; then
+                echo "# CONFIG_DM_REQ_CRYPT is not set" >> "\$GENERIC_CFG"
+                echo "✅ Applied DM_REQ_CRYPT fix to \$GENERIC_CFG"
+            else
+                echo "ℹ️  DM_REQ_CRYPT already present in \$GENERIC_CFG"
             fi
-        done
+        else
+            echo "⚠️  GENERIC_CFG not found: \$GENERIC_CFG"
+            # Fallback: try QCA feed paths (not consumed by kconfig.pl but may help in future builds)
+            for cfg in "/workdir/gl-infra-builder/wlan-ap/feeds/qca-wifi-6/ipq60xx/config-5.4" "/workdir/gl-infra-builder/wlan-ap/feeds/qca-wifi-6/ipq807x/config-5.4"; do
+                if [ -f "\$cfg" ]; then
+                    if ! grep -q "DM_REQ_CRYPT" "\$cfg" 2>/dev/null; then
+                        echo "# CONFIG_DM_REQ_CRYPT is not set" >> "\$cfg"
+                        echo "✅ Applied DM_REQ_CRYPT fix to \$cfg"
+                    fi
+                fi
+            done
+        fi
         cd /workdir/gl-infra-builder/wlan-ap/openwrt/files/etc
         echo "$(date +"%Y.%m.%d")" >./glversion
         echo " Bulid By@Siriling " >./version.type
