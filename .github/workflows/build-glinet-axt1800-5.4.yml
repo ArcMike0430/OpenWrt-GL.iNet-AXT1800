@@ -164,6 +164,10 @@ jobs:
         # Sometimes needed twice in QSDK builds (kernel syncconfig re-triggers)
         yes "" | make oldconfig > /dev/null 2>&1 || true
 
+        # Confirm the fix applied
+        echo "✅ Config fixes applied. Verifying DM_REQ_CRYPT in .config:"
+        grep "^CONFIG_DM_REQ_CRYPT" .config || echo "⚠️ Not found in .config — will fail silently"
+
         echo "✅ Config fixes applied — starting full compile"
         echo -e "$(nproc) thread compile"
         make -j$(expr $(nproc) + 1) GL_PKGDIR=/workdir/glinet/pkg_config/ V=s
