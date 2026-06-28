@@ -80,6 +80,8 @@ jobs:
         cd /workdir/gl-infra-builder/wlan-ap/openwrt
         ./scripts/gen_config.py glinet-axt1800 glinet_depends
         git clone https://github.com/gl-inet/glinet4.x.git -b main /workdir/glinet
+        # Fix glinet4.x path: gl_pkg_config.mk moved from ipq60xx/ to pkg_config/
+        cp /workdir/glinet/pkg_config/gl_pkg_config_axt1800.mk /workdir/glinet/pkg_config/gl_pkg_config.mk
         cp -r ~/work/OpenWrt-GL.iNet-AXT1800/OpenWrt-GL.iNet-AXT1800/etc/ ./package/base-files/files
         ./scripts/feeds update -a
         ./scripts/feeds install -a
@@ -138,7 +140,7 @@ jobs:
       run: |
         cd /workdir/gl-infra-builder/wlan-ap/openwrt
         echo -e "$(nproc) thread compile"
-        make -j$(expr $(nproc) + 1) GL_PKGDIR=/workdir/glinet/ipq60xx/ V=s
+        make -j$(expr $(nproc) + 1) GL_PKGDIR=/workdir/glinet/pkg_config/ V=s
         echo "::set-output name=status::success"
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
