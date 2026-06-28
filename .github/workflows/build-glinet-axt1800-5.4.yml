@@ -140,6 +140,8 @@ jobs:
     - name: Official compile the firmware
       id: official-compile
       if: env.OFFICIAL == 'true'
+      env:
+        C_INCLUDE_PATH: /usr/include
       run: |
         cd /workdir/gl-infra-builder/wlan-ap/openwrt
         echo -e "$(nproc) thread compile"
