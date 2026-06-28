@@ -144,6 +144,18 @@ jobs:
         C_INCLUDE_PATH: /usr/include
       run: |
         cd /workdir/gl-infra-builder/wlan-ap/openwrt
+
+        # === AGGRESSIVE DM_REQ_CRYPT + NEW SYMBOL FIX ===
+        # QSDK builds regenerate .config during toolchain/kernel prepare,
+        # so oldconfig must run again right before the final compile.
+        echo "→ Running late-stage oldconfig to catch all NEW symbols..."
+        yes "" | make oldconfig > /dev/null 2>&1 || true
+        echo "CONFIG_DM_REQ_CRYPT=n" >> .config
+
+        # Sometimes needed twice in QSDK builds (kernel syncconfig re-triggers)
+        yes "" | make oldconfig > /dev/null 2>&1 || true
+
+        echo "✅ Config fixes applied — starting full compile"
         echo -e "$(nproc) thread compile"
         make -j$(expr $(nproc) + 1) GL_PKGDIR=/workdir/glinet/pkg_config/ V=s
         echo "::set-output name=status::success"
