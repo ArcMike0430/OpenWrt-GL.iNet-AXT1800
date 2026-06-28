@@ -102,6 +102,21 @@ jobs:
         echo "$(date +"%Y.%m.%d")" >./glversion
         echo " Bulid By@Siriling " >./version.type
 
+    - name: Pre-fetch QSDK kernel source
+      if: env.OFFICIAL == 'true'
+      run: |
+        echo "→ Pre-fetching QSDK kernel tarball..."
+        mkdir -p /workdir/gl-infra-builder/wlan-ap/openwrt/dl
+        KERNEL_FILE="linux-5.4.164-qsdk-d5fcb18e5420670c8734c6a659873e73adab6dac.tar.xz"
+        if [ ! -f "/workdir/gl-infra-builder/wlan-ap/openwrt/dl/$KERNEL_FILE" ]; then
+          wget -q --timeout=120 --tries=3 \
+            "https://mirror2.openwrt.org/sources/$KERNEL_FILE" \
+            -O "/workdir/gl-infra-builder/wlan-ap/openwrt/dl/$KERNEL_FILE"
+          echo "✅ Kernel tarball downloaded ($(du -h /workdir/gl-infra-builder/wlan-ap/openwrt/dl/$KERNEL_FILE | cut -f1))"
+        else
+          echo "✅ Kernel tarball already cached"
+        fi
+
     - name: run setup.py
       if: env.OFFICIAL == 'false'
       run: |
