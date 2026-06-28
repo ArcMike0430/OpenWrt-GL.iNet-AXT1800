@@ -88,6 +88,8 @@ jobs:
         make defconfig
         # Enable ATH11K_CFR for channel frequency response (sensing)
         echo 'CONFIG_ATH11K_CFR=y' >> .config
+        # Fix: DM_REQ_CRYPT has no default in BSP kernel patches
+        echo 'CONFIG_DM_REQ_CRYPT is not set' >> .config
         cd /workdir/gl-infra-builder/wlan-ap/openwrt/files/etc
         echo "$(date +"%Y.%m.%d")" >./glversion
         echo " Bulid By@Siriling " >./version.type
