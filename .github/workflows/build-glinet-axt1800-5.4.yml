@@ -86,12 +86,18 @@ jobs:
         ./scripts/feeds update -a
         ./scripts/feeds install -a
         make defconfig
-        # Enable ATH11K_CFR for channel frequency response (sensing)
+
+        # Enable ATH11K_CFR for channel frequency response (CSI sensing)
         echo 'CONFIG_ATH11K_CFR=y' >> .config
-        # Auto-answer NEW kernel config prompts with defaults (handles DM_REQ_CRYPT, etc.)
+
+        # === CRITICAL FIX for DM_REQ_CRYPT (NEW) prompt in QSDK kernel ===
+        # Auto-answer NEW/dependent kernel config symbols non-interactively
+        echo "→ Running make oldconfig to suppress interactive prompts..."
         yes "" | make oldconfig > /dev/null 2>&1 || true
-        # Explicitly disable the problematic sub-option (Qualcomm-specific, no Kconfig default)
+
+        # Explicitly disable the problematic Qualcomm dm-req-crypt sub-option
         echo "CONFIG_DM_REQ_CRYPT=n" >> .config
+        echo "✅ DM_REQ_CRYPT disabled via .config override"
         cd /workdir/gl-infra-builder/wlan-ap/openwrt/files/etc
         echo "$(date +"%Y.%m.%d")" >./glversion
         echo " Bulid By@Siriling " >./version.type
