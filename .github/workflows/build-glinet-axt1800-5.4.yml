@@ -89,15 +89,24 @@ jobs:
         # Enable ATH11K_CFR for channel frequency response (sensing)
         echo 'CONFIG_ATH11K_CFR=y' >> .config
         # Fix: DM_REQ_CRYPT (Qualcomm-specific, no default in BSP Kconfig) — write to QCA wifi kernel config fragments
-        # Path is relative to wlan-ap root (../feeds/), NOT openwrt/feeds/
         # Using quoted format (# CONFIG_... is not set) which is the standard kernel .config syntax for disabling
-        for cfg in ../feeds/qca-wifi-6/ipq60xx/config-5.4 ../feeds/qca-wifi-6/ipq807x/config-5.4; do
-            if [ -f "\$cfg" ]; then
-                if ! grep -q "DM_REQ_CRYPT" "\$cfg"; then
-                    echo "# CONFIG_DM_REQ_CRYPT is not set" >> "\$cfg"
-                    echo "→ Added DM_REQ_CRYPT disable to \$cfg"
+        # Debug: verify where the config files actually are
+        ls -la /workdir/gl-infra-builder/wlan-ap/feeds/qca-wifi-6/*/config-5.4 2>&1 || echo "⚠️  wlan-ap/feeds/ not found, trying alternate paths..."
+        ls -la ../../feeds/qca-wifi-6/*/config-5.4 2>&1 || echo "⚠️  ../../feeds/ not found"
+        # Apply fix
+        for target in ipq60xx ipq807x; do
+            for base in "/workdir/gl-infra-builder/wlan-ap/feeds/qca-wifi-6" "../../feeds/qca-wifi-6" "../feeds/qca-wifi-6"; do
+                CFG="${base}/${target}/config-5.4"
+                if [ -f "$CFG" ]; then
+                    if ! grep -q "DM_REQ_CRYPT" "$CFG" 2>/dev/null; then
+                        echo "# CONFIG_DM_REQ_CRYPT is not set" >> "$CFG"
+                        echo "✅ Disabled DM_REQ_CRYPT in $CFG"
+                    else
+                        echo "ℹ️  DM_REQ_CRYPT already present in $CFG"
+                    fi
+                    break
                 fi
-            fi
+            done
         done
         cd /workdir/gl-infra-builder/wlan-ap/openwrt/files/etc
         echo "$(date +"%Y.%m.%d")" >./glversion
